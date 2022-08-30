@@ -163,7 +163,10 @@ public abstract class AbstractStreamWriteFunction<I>
     if (inputEnded) {
       return;
     }
-    snapshotState();
+    List<WriteStatus> statuses = flushData();
+    sendEventToCoordinator(statuses, this.inputEnded);
+    // TODO: maintain reset state of confirming flag
+
     // Reload the snapshot state as the current state.
     reloadWriteMetaState();
   }
@@ -173,6 +176,7 @@ public abstract class AbstractStreamWriteFunction<I>
   @Override
   public void endInput() {
     this.inputEnded = true;
+    // TODO: figure out how to refactor this endInput flag
   }
 
   // -------------------------------------------------------------------------
@@ -315,10 +319,16 @@ public abstract class AbstractStreamWriteFunction<I>
     return instant.equals(this.currentInstant) && hasData;
   }
 
-  private void executeFlush() {
-    flush();
-    confirming = true;
-  }
+  abstract List<WriteStatus> flushData();
 
-  abstract void flush();
+  protected void sendEventToCoordinator(List<WriteStatus> statusList) {
+    final WriteMetadataEvent event = WriteMetadataEvent.builder()
+        .taskID(taskID)
+        .instantTime(this.currentInstant)
+        .writeStatus(statusList)
+        .lastBatch(true)
+        .endInput(inputEnded)
+        .build();
+    this.eventGateway.sendEventToCoordinator(event);
+  }
 }

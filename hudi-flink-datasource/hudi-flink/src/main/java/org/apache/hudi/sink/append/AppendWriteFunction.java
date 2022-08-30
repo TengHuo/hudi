@@ -89,6 +89,7 @@ public class AppendWriteFunction<I> extends AbstractStreamWriteFunction<I> {
   /**
    * End input action for batch source.
    */
+  @Override
   public void endInput() {
     super.endInput();
     flushData(true);
@@ -117,7 +118,8 @@ public class AppendWriteFunction<I> extends AbstractStreamWriteFunction<I> {
         this.rowType);
   }
 
-  private void flushData(boolean endInput) {
+  @Override
+  private List<WriteStatus> flushData() {
     final List<WriteStatus> writeStatus;
     if (this.writerHelper != null) {
       writeStatus = this.writerHelper.getWriteStatuses(this.taskID);
