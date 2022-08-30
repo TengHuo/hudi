@@ -192,6 +192,39 @@ public abstract class AbstractStreamWriteFunction<I>
   // -------------------------------------------------------------------------
 
   private void restoreWriteMetadata() throws Exception {
+    /*
+    [bootstrap event, success event, success event] -> write successed;
+    [bootstrap event] -> write started, but not success;
+    [] -> not possible
+     */
+
+    if (this.writeMetadataState.get().anyMatch(event.isComplete)) {
+      // reset task id
+      // resend event
+      // end, waiting for a new instant from coordinator
+
+    } else if (this.writeMetadataState.get().size == 1 && event.isBootstrap) {
+      // start write with last pending instant
+    } else if (this.writeMetadataState.get().isEmpty){
+      // resend bootstrap event
+      // check ckpMetadata
+      // if ckpMetadata is completed || aborted -> waiting for a new instant
+      // if ckpMetadata is inflight -> start writing with this instant
+    } else {
+      throw RuntimeException("Unexpected condition")
+    }
+
+    protected String waitingForNewInstant() {
+
+    }
+
+    protected String getMostRecentPendingInstant() {
+
+    }
+
+
+
+
     String lastInflight = lastPendingInstant();
     boolean eventSent = false;
     for (WriteMetadataEvent event : this.writeMetadataState.get()) {
@@ -281,4 +314,11 @@ public abstract class AbstractStreamWriteFunction<I>
   private boolean invalidInstant(String instant, boolean hasData) {
     return instant.equals(this.currentInstant) && hasData;
   }
+
+  private void executeFlush() {
+    flush();
+    confirming = true;
+  }
+
+  abstract void flush();
 }
