@@ -30,9 +30,9 @@ import java.io.File
 
 class TestInsertTable extends HoodieSparkSqlTestBase {
 
-  test("Test Insert Into with values") {
+  test("Test Insert Into MOR table") {
     withTempDir { tmp =>
-      val tableName = generateTableName
+      val tableName = "test_mor_tab"
       // Create a partitioned table
       spark.sql(
         s"""
@@ -41,27 +41,30 @@ class TestInsertTable extends HoodieSparkSqlTestBase {
            |  dt string,
            |  name string,
            |  price double,
-           |  ts long
+           |  ts long,
+           |  new_test_col decimal(25, 4) comment 'a column for test decimal type'
            |) using hudi
+           |options
+           |(
+           |    type = 'mor'
+           |    ,primaryKey = 'id'
+           |    ,hoodie.index.type = 'INMEMORY'
+           |)
            | tblproperties (primaryKey = 'id')
            | partitioned by (dt)
            | location '${tmp.getCanonicalPath}'
-       """.stripMargin)
+     """.stripMargin)
 
       // Note: Do not write the field alias, the partition field must be placed last.
       spark.sql(
         s"""
            | insert into $tableName values
-           | (1, 'a1', 10, 1000, "2021-01-05"),
-           | (2, 'a2', 20, 2000, "2021-01-06"),
-           | (3, 'a3', 30, 3000, "2021-01-07")
-              """.stripMargin)
+           | (1, 'a1', 10, 1000, 1.0, "2021-01-05"),
+           | (2, 'a2', 20, 2000, 2.0, "2021-01-06"),
+           | (3, 'a3', 30, 3000, 3.0, "2021-01-07")
+            """.stripMargin)
 
-      checkAnswer(s"select id, name, price, ts, dt from $tableName")(
-        Seq(1, "a1", 10.0, 1000, "2021-01-05"),
-        Seq(2, "a2", 20.0, 2000, "2021-01-06"),
-        Seq(3, "a3", 30.0, 3000, "2021-01-07")
-      )
+      spark.sql(s"select id, name, price, ts, dt from $tableName").show(false)
     }
   }
 
