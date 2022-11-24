@@ -220,9 +220,9 @@ object DefaultSource {
     //       case  we opt in to not be providing catalog's schema, and instead force Hudi relations to fetch the schema
     //       from the table itself
     val userSchema = if (isUsingHiveCatalog(sqlContext.sparkSession)) {
-      None
+      None // will load schema from hoodie.properties later
     } else {
-      Option(schema)
+      Option(schema) // this schema comes from Spark catalog
     }
 
     if (metaClient.getCommitsTimeline.filterCompletedInstants.countInstants() == 0) {

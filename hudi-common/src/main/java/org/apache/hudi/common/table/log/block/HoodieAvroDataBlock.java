@@ -167,7 +167,8 @@ public class HoodieAvroDataBlock extends HoodieDataBlock {
         // after we read those record by writeSchema,  we rewrite those record with readerSchema in AbstractHoodieLogRecordReader
         finalReadSchema = writerSchema;
       }
-
+      // finalReadSchema is from readerSchema, which is from Spark catalog
+      // if fix namespace for column "new_test_col" here, the test case in TestInsertTable.scala can run properly
       Schema readSchema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Record\",\"fields\":[{\"name\":\"_hoodie_commit_time\",\"type\":[\"string\",\"null\"]},{\"name\":\"_hoodie_commit_seqno\",\"type\":[\"string\",\"null\"]},{\"name\":\"_hoodie_record_key\",\"type\":[\"string\",\"null\"]},{\"name\":\"_hoodie_partition_path\",\"type\":[\"string\",\"null\"]},{\"name\":\"_hoodie_file_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"id\",\"type\":[\"int\",\"null\"]},{\"name\":\"name\",\"type\":[\"string\",\"null\"]},{\"name\":\"price\",\"type\":[\"double\",\"null\"]},{\"name\":\"ts\",\"type\":[\"long\",\"null\"]},{\"name\":\"new_test_col\",\"type\":[{\"type\":\"fixed\",\"name\":\"fixed\",\"namespace\":\"hoodie.test_mor_tab.test_mor_tab_record.new_test_col\",\"size\":11,\"logicalType\":\"decimal\",\"precision\":25,\"scale\":4},\"null\"]},{\"name\":\"dt\",\"type\":[\"string\",\"null\"]}]}");
       this.reader = new GenericDatumReader<>(writerSchema, readSchema);
 

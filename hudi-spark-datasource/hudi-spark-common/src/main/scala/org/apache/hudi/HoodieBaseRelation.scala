@@ -659,8 +659,10 @@ object HoodieBaseRelation extends SparkAdapterSupport {
   def generateUnsafeProjection(from: StructType, to: StructType): UnsafeProjection =
     HoodieCatalystExpressionUtils.generateUnsafeProjection(from, to)
 
-  def convertToAvroSchema(structSchema: StructType): Schema =
+  def convertToAvroSchema(structSchema: StructType): Schema = {
+    // FIXME: need use the same recordName as writer schema
     sparkAdapter.getAvroSchemaConverters.toAvroType(structSchema, nullable = false, "Record")
+  }
 
   def getPartitionPath(fileStatus: FileStatus): Path =
     fileStatus.getPath.getParent
